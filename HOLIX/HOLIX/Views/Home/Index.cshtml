@@ -1,0 +1,111 @@
+﻿@model IEnumerable<HOLIX.Models.User>
+@{
+    Layout = null;
+}
+<script>
+    const model = JSON.parse('@Html.Raw(Json.Serialize(Model))')
+</script>
+
+<script>const pins = [];</script>
+<title>Index</title>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    <p>
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </p>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<button onclick="console.log(pins)">
+    OKOK
+</button>
+
+
+<div id="map"></div>
+<style type="text/css">
+
+    #map {
+        height: 50%;
+        width: 50%;
+    }
+</style>
+<script>let map;
+    function initMap() {
+
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: { lat: -18.9113, lng: -48.2622 },
+            zoom: 13,
+        });
+
+
+
+        for (i = 0; i < 5; i++) {
+            coords = { lat: -18.9119 + i, lng: -48.2629 + i }
+            addMarker(coords)
+        }
+
+        function addMarker(coords) {
+            var marker = new google.maps.Marker({
+                position: coords,
+                map: map,
+            });
+        }
+
+
+    }
+
+
+
+    function geocode(address) {
+
+
+        var location = address;
+        axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
+            params: {
+                address: location,
+                key: ''
+            }
+        })
+            .then(function (response) {
+                //console.log(response);
+                //console.log(response.data.results[0].geometry.location.lat)
+                //console.log(response.data.results[0].geometry.location.lng)
+                pins.push({ lat: response.data.results[0].geometry.location.lat, lng: response.data.results[0].geometry.location.lng })
+            })
+            .catch(function (error) {
+                console.log(error);
+            })
+
+    }</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=&callback=initMap&libraries=&v=weekly" async></script>
+
+<script>for (i in model) {
+
+        var res =
+            model[i].addressCity + ' ' +
+            model[i].addressComplement + ' ' +
+            model[i].addressCountry + ' ' +
+            model[i].addressNeighborhood + ' ' +
+            model[i].addressNumber + ' ' +
+            model[i].addressState + ' ' +
+            model[i].addressStreet;
+
+        geocode(res)
+    }</script>
