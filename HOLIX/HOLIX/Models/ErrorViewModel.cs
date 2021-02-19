@@ -2,10 +2,21 @@ using System;
 
 namespace HOLIX.Models
 {
+    /// <summary>
+    /// Error view model.
+    /// </summary>
     public class ErrorViewModel
     {
+        /// <summary>
+        /// Gets or sets request id.
+        /// </summary>
+        /// <value>Request id.</value>
         public string RequestId { get; set; }
 
-        public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+        /// <summary>
+        /// Identifies wether show request id.
+        /// </summary>
+        /// <returns>True: shows | False: not show.</returns>
+        public bool ShowRequestId => !string.IsNullOrEmpty(this.RequestId);
     }
 }

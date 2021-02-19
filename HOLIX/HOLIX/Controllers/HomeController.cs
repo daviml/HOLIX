@@ -10,6 +10,9 @@ using Microsoft.Extensions.Logging;
 
 namespace HOLIX.Controllers
 {
+    /// <summary>
+    /// Home controller.
+    /// </summary>
     public class HomeController : Controller
     {
         SqlCommand com = new SqlCommand();
@@ -18,18 +21,29 @@ namespace HOLIX.Controllers
         List<User> users = new List<User>();
         private readonly ILogger<HomeController> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HomeController"/> class.
+        /// </summary>
+        /// <param name="logger">Logger.</param>
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
             con.ConnectionString = "";
         }
 
+        /// <summary>
+        /// Index.
+        /// </summary>
+        /// <returns>View with users.</returns>
         public IActionResult Index()
         {
             FetchData();
             return View(users);
         }
 
+        /// <summary>
+        /// Get users in database and their addresses.
+        /// </summary>
         private void FetchData()
         {
             if (users.Count > 0)
@@ -69,8 +83,5 @@ namespace HOLIX.Controllers
                 throw ex;
             }
         }
-
-
-
     }
 }
