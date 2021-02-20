@@ -38,11 +38,15 @@
     Mostra Mapa
 </button>
 
+<a href="@Url.Action("Register")">
+    Novo Cadastro
+</a>
+
+
 <div style="visibility: hidden;" id="map"></div>
 
 
 <style type="text/css">
-
     #map {
         height: 50%;
         width: 50%;
@@ -52,22 +56,19 @@
 <script>
     function initMapS() {
         document.getElementById("map").style.visibility = "visible";
-   
+
         initMap(pins)
     }
 </script>
 
 
 <script>
-
     function geocode(address) {
-
-
         var location = address;
         axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
             params: {
                 address: location,
-                key: ''
+                key: '{geocode key here}'
             }
         })
             .then(function (response) {
@@ -76,22 +77,20 @@
             .catch(function (error) {
                 console.log(error);
             })
-
     }</script>
 <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=&callback=initMap&libraries=&v=weekly" async></script>
+<script src="https://maps.googleapis.com/maps/api/js?key={mapskeyhere}&callback=initMap&libraries=&v=weekly" async></script>
 
-<script>for (i in model) {
-
-    var res =
-        +'rua ' + model[i].addressStreet + ' ' +
-        model[i].addressNumber + ' ' +
-        model[i].addressComplement + ' ' +
-        +'bairro ' + model[i].addressNeighborhood + ' ' +
-        model[i].addressCity + ' ' +
-        model[i].addressState + ' ' +
-        model[i].addressCountry;
-
+<script>
+    for (i in model) {
+        var res =
+            +'rua ' + model[i].addressStreet + ' ' +
+            model[i].addressNumber + ' ' +
+            model[i].addressComplement + ' ' +
+            +'bairro ' + model[i].addressNeighborhood + ' ' +
+            model[i].addressCity + ' ' +
+            model[i].addressState + ' ' +
+            model[i].addressCountry;
         geocode(res)
     }</script>
 <script>
@@ -108,26 +107,19 @@
 <script>
     let map;
     function initMap(pins) {
-
         map = new google.maps.Map(document.getElementById("map"), {
             center: { lat: -18.9113, lng: -48.2622 },
             zoom: 12,
         });
-
-
-
         for (i = 0; i < pins.length; i++) {
             coords = pins[i]
             addMarker(coords)
         }
-
         function addMarker(coords) {
             var marker = new google.maps.Marker({
                 position: coords,
                 map: map,
             });
         }
-
-
     }
 </script>
