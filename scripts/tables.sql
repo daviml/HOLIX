@@ -1,3 +1,11 @@
+create table tuser (
+	userid varchar(32) primary key,
+	name varchar(32),
+	email varchar(32),
+	login varchar(32),
+	password varchar(32)
+);
+
 create table taddress (
 	addressid varchar(32) primary key,
 	userid varchar(32) references tuser (userid),
@@ -9,12 +17,4 @@ create table taddress (
 	city varchar(32),
 	state varchar(32),
 	country varchar(32)
-);
-
-create table tuser (
-	userid varchar(32) primary key,
-	name varchar(32),
-	email varchar(32),
-	login varchar(32),
-	password varchar(32)
 );
