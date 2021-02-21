@@ -2,6 +2,9 @@
 
 namespace HOLIX.Models
 {
+    /// <summary>
+    /// User model class.
+    /// </summary>
     public partial class User
     {
         /// <summary>
