@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
-using HOLIX.Models;
 using System.Data.SqlClient;
-using Microsoft.Extensions.Logging;
 using Database.Lib;
+using HOLIX.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace HOLIX.Controllers
 {
@@ -13,21 +14,27 @@ namespace HOLIX.Controllers
     /// </summary>
     public class HomeController : Controller
     {
-        public static bool isEdit = false;
-        SqlCommand com = new SqlCommand();
-        SqlDataReader dr;
-        SqlConnection con = new SqlConnection();
-        List<User> users = new List<User>();
-        private readonly ILogger<HomeController> _logger;
+        /// <summary>
+        /// Identifies if is user edition or addition.
+        /// </summary>
+        public static bool IsEdit = false;
+
+        private SqlCommand com = new SqlCommand();
+
+        private SqlDataReader dr;
+
+        private SqlConnection con = new SqlConnection();
+
+        private List<User> users = new List<User>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HomeController"/> class.
         /// </summary>
+        /// <param name="configuration">Configuration settings.</param>
         /// <param name="logger">Logger.</param>
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(IConfiguration configuration, ILogger<HomeController> logger)
         {
-            _logger = logger;
-            con.ConnectionString = "{ Your db connection strings here }";
+            this.con.ConnectionString = configuration.GetConnectionString("DatabaseConn");
         }
 
         /// <summary>
@@ -36,78 +43,82 @@ namespace HOLIX.Controllers
         /// <returns>View with users.</returns>
         public IActionResult Index()
         {
-            FetchData("");
-            return View(users);
+            this.FetchData(string.Empty);
+            return this.View(this.users);
         }
 
         /// <summary>
-        /// Opens the Action form for User, with the intend of Register
+        /// Opens the Action form for User, with the intend of Register.
         /// </summary>
-        /// <param name="userInstance">User instance</param>
-        /// <returns>View of Cadaster Register/Update</returns>
+        /// <param name="userInstance">User instance.</param>
+        /// <returns>View of Cadaster Register/Update.</returns>
         public IActionResult Register(User userInstance)
         {
-            isEdit = false;
-            return View("UserAction", new User());
+            IsEdit = false;
+            return this.View("UserAction", new User());
         }
 
         /// <summary>
-        /// Opens the Action form for User, with intend of Update
+        /// Opens the Action form for User, with intend of Update.
         /// </summary>
-        /// <param name="userCode">User code</param>
-        /// <returns>View of Cadaster Register/Update</returns>
+        /// <param name="userCode">User code.</param>
+        /// <returns>View of Cadaster Register/Update.</returns>
         public IActionResult Update(string userCode)
         {
-            isEdit = true;
+            IsEdit = true;
 
-            string filter = $"WHERE TUSER.USERID = '{userCode}'";
+            string filter = $"WHERE USR.USERID = '{userCode}'";
 
-            FetchData(filter);
+            this.FetchData(filter);
 
-            User userInstance = users[0]; 
+            User userInstance = this.users[0];
 
-            return View("UserAction", userInstance);
+            return this.View("UserAction", userInstance);
         }
 
         /// <summary>
-        /// Saves or updates user on database
+        /// Saves or updates user on database.
         /// </summary>
-        /// <param name="userInstance">User instance</param>
-        /// <returns>Redirects to index Action</returns>
+        /// <param name="userInstance">User instance.</param>
+        /// <returns>Redirects to index Action.</returns>
         [HttpPost]
         public IActionResult Save(User userInstance)
         {
-            con.Open();
-            string errorMessage = string.Empty; 
+            this.con.Open();
 
-            if (!isEdit)
+            if (!IsEdit)
             {
                 userInstance.AddressID = Guid.NewGuid().ToString();
-                userInstance.UserID = Guid.NewGuid().ToString(); 
+                userInstance.UserID = Guid.NewGuid().ToString();
             }
 
-            List<DbParam> parameters = DbParam.InitializeParams(userInstance);  
+            List<DbParam> parameters = DbParam.InitializeParams(userInstance);
 
-            string[] querys = FillQueryString(isEdit); 
+            string[] querys = this.FillQueryString(IsEdit);
 
-            Models.User.SaveData(con, querys, parameters, out errorMessage); 
+            Models.User.SaveData(this.con, querys, parameters, out string errorMessage);
 
-            con.Close(); 
-            return RedirectToAction("Index"); 
+            if (!string.IsNullOrEmpty(errorMessage))
+            {
+                Console.WriteLine(errorMessage);
+            }
+
+            this.con.Close();
+            return this.RedirectToAction("Index");
         }
 
         /// <summary>
-        /// Mount querys based on intended action (Insert/Update) 
+        /// Mount querys based on intended action (Insert/Update).
         /// </summary>
-        /// <param name="isEdit">Boolean to inform if action is insert or update</param>
-        /// <returns></returns>
+        /// <param name="isEdit">Boolean to inform if action is insert or update.</param>
+        /// <returns>Update or insert querys.</returns>
         public string[] FillQueryString(bool isEdit)
         {
             string[] querys = new string[2];
 
-            if(!isEdit)
+            if (!isEdit)
             {
-                querys[0] = "INSERT INTO [dbo].[TUSER](USERID, ADDRESSID, EMAIL, LOGIN, PASSWORD, NAME) VALUES (@UserID, @AddressID, @Email, @Login, @Pass, @Name)";
+                querys[0] = "INSERT INTO [dbo].[TUSER](USERID, EMAIL, LOGIN, PASSWORD, NAME) VALUES (@UserID, @Email, @Login, @Pass, @Name)";
 
                 querys[1] = "INSERT INTO [dbo].[TADDRESS](ADDRESSID, USERID, CITY, COMPLEMENT, COUNTRY, NEIGHBORHOOD, NUMBER, POSTALCODE, STATE, STREET) " +
                     "VALUES (@AddressID, @UserID, @AddressCity, @AddressComplement, @AddressCountry, @AddressNeighborhood, @AddressNumber, @AddressPostalCode, @AddressState, @AddressStreet)";
@@ -129,41 +140,60 @@ namespace HOLIX.Controllers
         /// </summary>
         private void FetchData(string filter)
         {
-            if (users.Count > 0)
+            if (this.users.Count > 0)
             {
-                users.Clear();
+                this.users.Clear();
             }
+
             try
             {
-                con.Open();
-                com.Connection = con;
-                com.CommandText = $"SELECT * FROM[dbo].[TUSER] INNER JOIN[dbo].[TADDRESS] ON TUSER.USERID = TADDRESS.USERID {filter}; ";
-                dr = com.ExecuteReader();
-                while (dr.Read())
+                this.con.Open();
+                this.com.Connection = this.con;
+                this.com.CommandText = $@" SELECT USR.USERID,
+                                            ADR.ADDRESSID,
+                                            USR.EMAIL,
+                                            USR.LOGIN,
+                                            USR.NAME,
+                                            USR.PASSWORD,
+                                            ADR.CITY,
+                                            ADR.COMPLEMENT,
+                                            ADR.COUNTRY,
+                                            ADR.NEIGHBORHOOD,
+                                            ADR.NUMBER,
+                                            ADR.POSTALCODE,
+                                            ADR.STATE,
+                                            ADR.STREET
+                                            FROM[dbo].[TUSER] USR INNER JOIN[dbo].[TADDRESS] ADR ON USR.USERID = ADR.USERID
+                                        {filter}; ";
+
+                this.dr = this.com.ExecuteReader();
+
+                while (this.dr.Read())
                 {
-                    users.Add(new User()
+                    this.users.Add(new User()
                     {
-                        UserID = dr["USERID"].ToString(),
-                        AddressID = dr["ADDRESSID"].ToString(),
-                        Email = dr["EMAIL"].ToString(),
-                        Login = dr["LOGIN"].ToString(),
-                        Name = dr["NAME"].ToString(),
-                        Password = dr["PASSWORD"].ToString(),
-                        AddressCity = dr["CITY"].ToString(),
-                        AddressComplement = dr["COMPLEMENT"].ToString(),
-                        AddressCountry = dr["COUNTRY"].ToString(),
-                        AddressNeighborhood = dr["NEIGHBORHOOD"].ToString(),
-                        AddressNumber = dr["NUMBER"].ToString(),
-                        AddressPostalCode = dr["POSTALCODE"].ToString(),
-                        AddressState = dr["STATE"].ToString(),
-                        AddressStreet = dr["STREET"].ToString(),
+                        UserID = this.dr["USERID"].ToString(),
+                        AddressID = this.dr["ADDRESSID"].ToString(),
+                        Email = this.dr["EMAIL"].ToString(),
+                        Login = this.dr["LOGIN"].ToString(),
+                        Name = this.dr["NAME"].ToString(),
+                        Password = this.dr["PASSWORD"].ToString(),
+                        AddressCity = this.dr["CITY"].ToString(),
+                        AddressComplement = this.dr["COMPLEMENT"].ToString(),
+                        AddressCountry = this.dr["COUNTRY"].ToString(),
+                        AddressNeighborhood = this.dr["NEIGHBORHOOD"].ToString(),
+                        AddressNumber = this.dr["NUMBER"].ToString(),
+                        AddressPostalCode = this.dr["POSTALCODE"].ToString(),
+                        AddressState = this.dr["STATE"].ToString(),
+                        AddressStreet = this.dr["STREET"].ToString(),
                     });
                 }
-                con.Close();
+
+                this.con.Close();
             }
             catch (Exception ex)
             {
-                throw ex;
+                Console.WriteLine(ex);
             }
         }
     }
