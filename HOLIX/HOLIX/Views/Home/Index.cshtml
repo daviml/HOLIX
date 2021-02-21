@@ -2,133 +2,311 @@
 @{
     Layout = null;
 }
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2uWZqKkDLR96USbDml8aKdjo6i8zt-7E&callback=initMap&libraries=&v=weekly" async></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
 <script>
     const model = JSON.parse('@Html.Raw(Json.Serialize(Model))')
-</script>
+    var pins = [];
+    var selectedUsersId = [];
+    var map;
 
-<script>const pins = [];</script>
-<title>Index</title>
-<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    function filterLocations()
+    {
+        var res = '';
+        for (j = 0; j < selectedUsersId.length; j++) {
+            for (i in model) {
+                if (selectedUsersId[j] == model[i].userID && model[i].userID != undefined && model[i].userID != null)
+                {
+                    var street = 'rua ' + model[i].addressStreet ? model[i].addressStreet : '';
+                    var addNum = model[i].addressNumber ? model[i].addressNumber : '';
+                    var comp = model[i].addressComplement ? model[i].addressComplement : '';
+                    var neigh = ' bairro ' + model[i].addressNeighborhood ? model[i].addressNeighborhood : '';
+                    var city = model[i].addressCity ? model[i].addressCity : '';
+                    var state = model[i].addressState ? model[i].addressState : '';
+                    var country = model[i].addressCountry ? model[i].addressCountry : '';
 
+                    var addr = street + ' ' +    
+                        addNum + ' ' +
+                        comp + ' ' +
+                        neigh  + ' ' +
+                        city + ' ' +
+                        state + ' ' +
+                        country;
 
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
-                Acões
-            </th>
-        </tr>
-        
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>
-                    <p>
-                        @Html.DisplayFor(modelItem => item.Name)
-                    </p>
-                </td>
-                <td>
-                    @Html.ActionLink("Editar cadastro", "Update", new { userCode = item.UserID })
-                </td>
-            </tr>
-            
+                    geocode(model[i].name, addr)
+                }
+            }
         }
-    </tbody>
-</table>
-
-<button onclick="initMapS(pins)">
-    Mostra Mapa
-</button>
-
-<a href="@Url.Action("Register")">
-    Novo Cadastro
-</a>
-
-
-<div style="visibility: hidden;" id="map"></div>
-
-
-<style type="text/css">
-    #map {
-        height: 50%;
-        width: 50%;
     }
-</style>
 
-<script>
-    function initMapS() {
-        document.getElementById("map").style.visibility = "visible";
-
-        initMap(pins)
-    }
-</script>
-
-
-<script>
-    function geocode(address) {
+    function geocode(title, address) {
         var location = address;
         axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
             params: {
                 address: location,
-                key: '{geocode key here}'
+                key: 'AIzaSyD9Efdj9hUrm19UoFsq3AkGFRsHl3sPxA4'
             }
         })
-            .then(function (response) {
-                pins.push({ lat: response.data.results[0].geometry.location.lat, lng: response.data.results[0].geometry.location.lng })
-            })
-            .catch(function (error) {
-                console.log(error);
-            })
-    }</script>
-<script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key={mapskeyhere}&callback=initMap&libraries=&v=weekly" async></script>
-
-<script>
-    for (i in model) {
-        var res =
-            +'rua ' + model[i].addressStreet + ' ' +
-            model[i].addressNumber + ' ' +
-            model[i].addressComplement + ' ' +
-            +'bairro ' + model[i].addressNeighborhood + ' ' +
-            model[i].addressCity + ' ' +
-            model[i].addressState + ' ' +
-            model[i].addressCountry;
-        geocode(res)
-    }</script>
-<script>
-    function test(pins) {
-        for (i = 0; i < pins.length; i++) {
-
-            console.log(pins[i])
-        }
+        .then(function (response) {
+            pins.push({ title, pin: { lat: response.data.results[0].geometry.location.lat, lng: response.data.results[0].geometry.location.lng }})
+            initMap(pins)
+        })
+        .catch(function (error) {
+            console.log(error);
+        })
     }
-</script>
-<script>
-    test(pins)
-</script>
 
-<script>
-    let map;
-    function initMap(pins) {
+    function startMap() {
         map = new google.maps.Map(document.getElementById("map"), {
             center: { lat: -18.9113, lng: -48.2622 },
             zoom: 12,
         });
-        for (i = 0; i < pins.length; i++) {
-            coords = pins[i]
-            addMarker(coords)
-        }
-        function addMarker(coords) {
-            var marker = new google.maps.Marker({
-                position: coords,
-                map: map,
-            });
+    }
+
+    function initMap(pins) {
+        startMap()
+
+        if (pins != null && pins != undefined) {
+            for (i = 0; i < pins.length; i++) {
+                var marker = new google.maps.Marker({
+                    position: pins[i].pin,
+                    map,
+                    title: pins[i].title
+                });
+            }
+
+            window.scrollTo(0,document.body.scrollHeight)
         }
     }
+
+    function initMapS() {
+        pins = []
+        startMap()
+        selectedUsersId = $('.table').find('input[type="checkbox"]')
+            .filter(':checked')
+            .toArray()
+            .map(function(x) {
+                return $(x).attr('id');
+            });
+        filterLocations();
+        document.getElementById("map").style.visibility = "visible";
+    }
+
+    function editUser(userCode) {
+        var url = '@Url.Action("Update")?userCode=' + userCode;
+        window.location.href = url;
+    }
+
+    function newUser() {
+        var url = '@Url.Action("Register")'
+        window.location.href = url;
+    }
+
+    function filterUsers() {
+        var searchWord = $('#search').val();
+        $(".table tr").remove()
+
+        for (i in model) {
+            if (model[i].name.toLowerCase().includes(searchWord.toLowerCase())) {
+                var name = model[i].name
+                $('.table').find('tbody').append("<tr><td><div class='container'><div class='item'>" +
+                    "<input type='checkbox' class='form-check-input' id='" + model[i].userID + "'> " +
+                    "<button type='button' data-toggle='tooltip' title='Editar usuário' class='editUser btn-md' css='background-color: transparent;' onclick='editUser(" + model[i].userID + ")'>" +
+                    "<i class='material-icons'>edit</i></button>" + name +
+                    "</div></div></tr></td>");
+            }
+        }
+    }
+
+    $(document).ready(function() {
+        $(".allOptions").on('change', function() {
+            if($(this).is(':checked')) {
+                $('input:checkbox').prop('checked', true);
+            } else {
+                $('input:checkbox').prop('checked', false);
+            }
+        });
+    });
 </script>
+
+<title>Index</title>
+
+<body>
+    <img src='@Url.Content("~/images/background.jpg")' class="bg">
+
+    <div id="page-wrap">
+        <div class="pulsingButton"><button id="showMap" type="button" data-toggle="tooltip" title="Mostrar Mapa" class="btn btn-primary btn-circle btn-xl" onclick="initMapS()">
+            <i class="material-icons">location_on</i>
+        </button></div> Mostrar mapa
+
+        <button type="button" data-toggle="tooltip" title="Novo usuário" class=" newUser btn btn-primary btn-circle btn-xl" onclick="newUser()">
+            <i class="material-icons">person_add</i>
+        </button> Novo Cadastro
+
+        <div class="c2" style="margin-top: 25px;">
+            <div class="item" style="min-width: 200px;">
+                <input type="checkbox" class="form-check-input allOptions">
+                <b>@Html.DisplayNameFor(model => model.Name)</b>
+            </div>
+            <div class="item input-group rounded" style="width: 300px; margin-left: 25px;">
+                <input id="search" type="search" class="form-control rounded" placeholder="Buscar" aria-label="Search" aria-describedby="search-addon" style="display: inline; min-width: 250px;" onchange="filterUsers()" />
+                <i class="material-icons" style="margin-left: 8px;">search</i>
+            </div>
+        </div>
+        <div class="table-div">
+            <table class="table">
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="container">
+                                    <div class="item">
+                                        <input type="checkbox" class="form-check-input" id="@item.UserID">
+                                        <button type="button" data-toggle="tooltip" title="Editar usuário" class="editUser btn-md" css="background-color: transparent;" onclick="editUser(@item.UserID)">
+                                            <i class="material-icons">edit</i>
+                                        </button>
+                                        @Html.DisplayFor(modelItem => item.Name)
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div style="visibility: hidden;" id="map"></div>
+    </div>
+</body>
+
+<style type="text/css">
+    #showMap {
+        background-color: Transparent;
+        background-repeat:no-repeat;
+        border: none;
+    }
+
+    .pulsingButton {
+        float: left;
+        margin-right: 15px;
+        margin-top: -5px;
+        border-radius: 100%;
+        box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.5);
+        background-color: #0d6efd;
+        -webkit-animation: pulsing 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
+        -moz-animation: pulsing 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
+        -ms-animation: pulsing 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
+        animation: pulsing 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
+        transition: all 300ms ease-in-out;
+    }
+
+    a.pulsingButton:hover {
+        -webkit-animation: none;
+        -moz-animation: none;
+        -ms-animation: none;
+        animation: none;
+        color: #ffffff;
+    }
+
+    @@-webkit-keyframes pulsing {
+        to {
+            box-shadow: 0 0 0 10px rgba(13, 110, 253, 0);
+        }
+    }
+
+    @@-moz-keyframes pulsing {
+        to {
+            box-shadow: 0 0 0 10px rgba(13, 110, 253, 0);
+        }
+    }
+
+    @@-ms-keyframes pulsing {
+        to {
+            box-shadow: 0 0 0 10px rgba(13, 110, 253, 0);
+        }
+    }
+
+    @@keyframes pulsing {
+        to {
+            box-shadow: 0 0 0 10px rgba(13, 110, 253, 0);
+        }
+    }
+
+    .table-div {
+        padding: 0px 20px 20px 20px;
+        height: 600px;
+        overflow: auto;
+        width: 50%;
+    }
+
+    .table {
+        width: 100%;
+    }
+
+    .item {
+        margin: 5px;
+        text-align: left;
+        font-size: 1.5em;
+        align-items: center;
+    }
+
+    .c2 {
+        margin-top: 25px;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+    }
+
+    .container {
+        flex-direction: column;
+        flex-flow: column nowrap;
+        justify-content: flex-start;
+        margin-left: 0px;
+        align-items: center;
+    }
+
+    img.bg {
+        min-height: 100%;
+        min-width: 1024px;
+        width: 100%;
+        height: auto;
+        position: fixed;
+        top: 0;
+        left: 0;
+    }
+
+    .btn-circle {
+        padding: 6px 6px;
+        border-radius: 100%;
+    }
+
+    .newUser {
+        margin-top: -5px;
+        margin-left: 50px;
+    }
+
+    .editUser {
+        background-color: transparent;
+        border: none;
+    }
+
+    #page-wrap {
+        position: relative;
+        padding: 20px;
+    }
+
+    #map {
+        margin-right: 10px;
+        margin-top: 50px;
+        height: 100%;
+        width: 100%;
+    }
+</style>
