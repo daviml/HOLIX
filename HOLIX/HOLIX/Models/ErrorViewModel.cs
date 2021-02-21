@@ -1,5 +1,3 @@
-using System;
-
 namespace HOLIX.Models
 {
     /// <summary>

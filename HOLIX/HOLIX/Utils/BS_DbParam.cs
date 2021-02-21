@@ -6,6 +6,11 @@ namespace Database.Lib
 {
     public partial class DbParam
     {
+        /// <summary>
+        /// Sets the parameters to be used in querys
+        /// </summary>
+        /// <param name="user">User instance</param>
+        /// <returns>List of Dbparam</returns>
         public static List<DbParam> InitializeParams(User user)
         {
             List<DbParam> parameters = new List<DbParam>

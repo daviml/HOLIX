@@ -8,8 +8,6 @@ using Database.Lib;
 
 namespace HOLIX.Controllers
 {
-
-
     /// <summary>
     /// Home controller.
     /// </summary>
@@ -29,7 +27,7 @@ namespace HOLIX.Controllers
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
-            con.ConnectionString = "{ Your connection strings here }";
+            con.ConnectionString = "{ Your db connection strings here }";
         }
 
         /// <summary>
@@ -43,14 +41,32 @@ namespace HOLIX.Controllers
         }
 
         /// <summary>
-        /// Opens the Action form for User
+        /// Opens the Action form for User, with the intend of Register
         /// </summary>
         /// <param name="userInstance">User instance</param>
         /// <returns>View of Cadaster Register/Update</returns>
         public IActionResult Register(User userInstance)
         {
             isEdit = false;
-            return View("UserAction", new User()); 
+            return View("UserAction", new User());
+        }
+
+        /// <summary>
+        /// Opens the Action form for User, with intend of Update
+        /// </summary>
+        /// <param name="userCode">User code</param>
+        /// <returns>View of Cadaster Register/Update</returns>
+        public IActionResult Update(string userCode)
+        {
+            isEdit = true;
+
+            string filter = $"WHERE TUSER.USERID = '{userCode}'";
+
+            FetchData(filter);
+
+            User userInstance = users[0]; 
+
+            return View("UserAction", userInstance);
         }
 
         /// <summary>
@@ -98,9 +114,9 @@ namespace HOLIX.Controllers
             }
             else
             {
-                querys[0] = "UPDATE [dbo].[TUSER] SET EMAIL = @Email, PASSWORD = @Pass, NAME = @Name WHERE USERID = @UserID";
+                querys[0] = "UPDATE [dbo].[TUSER] SET EMAIL = @Email, PASSWORD = @Pass, LOGIN = @Login, NAME = @Name WHERE USERID = @UserID";
 
-                querys[1] = "UPDATE [dbo].[TADDRESS] SET CITY = @AddressCity, COMPLEMENT = @AddressComplement, COUNTRY = @AddressCountry " +
+                querys[1] = "UPDATE [dbo].[TADDRESS] SET CITY = @AddressCity, COMPLEMENT = @AddressComplement, COUNTRY = @AddressCountry, " +
                     "NEIGHBORHOOD = @AddressNeighborhood, NUMBER = @AddressNumber, POSTALCODE = @AddressPostalCode, STATE = @AddressState, STREET = @AddressStreet " +
                     "WHERE ADDRESSID = @AddressID";
             }
