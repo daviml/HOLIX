@@ -31,8 +31,7 @@ namespace HOLIX.Controllers
         /// Initializes a new instance of the <see cref="HomeController"/> class.
         /// </summary>
         /// <param name="configuration">Configuration settings.</param>
-        /// <param name="logger">Logger.</param>
-        public HomeController(IConfiguration configuration, ILogger<HomeController> logger)
+        public HomeController(IConfiguration configuration)
         {
             this.con.ConnectionString = configuration.GetConnectionString("DatabaseConn");
         }
