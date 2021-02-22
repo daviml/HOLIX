@@ -281,6 +281,11 @@
         position: fixed;
         top: 0;
         left: 0;
+        animation: fadeIn ease 5s;
+        -webkit-animation: fadeIn ease 5s;
+        -moz-animation: fadeIn ease 5s;
+        -o-animation: fadeIn ease 5s;
+        -ms-animation: fadeIn ease 5s;
     }
 
     .btn-circle {
@@ -308,5 +313,30 @@
         margin-top: 50px;
         height: 100%;
         width: 100%;
+    }
+
+    @@keyframes fadeIn {
+        0% {opacity:0;}
+        100% {opacity:1;}
+    }
+
+    @@-moz-keyframes fadeIn {
+        0% {opacity:0;}
+        100% {opacity:1;}
+    }
+
+    @@-webkit-keyframes fadeIn {
+        0% {opacity:0;}
+        100% {opacity:1;}
+    }
+
+    @@-o-keyframes fadeIn {
+        0% {opacity:0;}
+        100% {opacity:1;}
+    }
+
+    @@-ms-keyframes fadeIn {
+        0% {opacity:0;}
+        100% {opacity:1;}
     }
 </style>
