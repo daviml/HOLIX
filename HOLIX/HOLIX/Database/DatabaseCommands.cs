@@ -4,12 +4,12 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using Database.Lib;
 
-namespace HOLIX.Models
+namespace HOLIX.Database
 {
     /// <summary>
-    /// User business class.
+    /// Database commands class.
     /// </summary>
-    public partial class User
+    public static class DatabaseCommands
     {
         /// <summary>
         /// Execute query parametrized.
@@ -19,7 +19,7 @@ namespace HOLIX.Models
         /// <param name="parameters">Parameters.</param>
         /// <param name="errorMessage">Error message.</param>
         /// <returns>True: success | False: error.</returns>
-        public static bool SaveData(SqlConnection connection, string[] querys, ICollection<DbParam> parameters, out string errorMessage)
+        public static bool ExecuteCommands(SqlConnection connection, ICollection<string> querys, ICollection<DbParam> parameters, out string errorMessage)
         {
             errorMessage = string.Empty;
             if (connection == null)
@@ -30,7 +30,7 @@ namespace HOLIX.Models
 
             try
             {
-                for (int i = 0; i < 2; i++)
+                foreach (string query in querys)
                 {
                     DbCommand command = connection.CreateCommand();
                     foreach (var param in parameters)
@@ -42,7 +42,7 @@ namespace HOLIX.Models
                         command.Parameters.Add(parameter);
                     }
 
-                    command.CommandText = querys[i];
+                    command.CommandText = query;
                     command.CommandTimeout = 0;
                     command.ExecuteNonQuery();
                 }

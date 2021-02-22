@@ -117,7 +117,7 @@
                 var name = model[i].name
                 $('.table').find('tbody').append("<tr><td><div class='container'><div class='item'>" +
                     "<input type='checkbox' class='form-check-input' id='" + model[i].userID + "'> " +
-                    "<button type='button' data-toggle='tooltip' title='Editar usuário' class='editUser btn-md' css='background-color: transparent;' onclick='editUser(" + model[i].userID + ")'>" +
+                    "<button type='button' data-toggle='tooltip' title='Editar usuário' class='editUser btn-md' css='background-color: transparent;' onclick=\"editUser('" + model[i].userID + "')\">" +
                     "<i class='material-icons'>edit</i></button>" + name +
                     "</div></div></tr></td>");
             }
@@ -169,7 +169,7 @@
                                 <div class="container">
                                     <div class="item">
                                         <input type="checkbox" class="form-check-input" id="@item.UserID">
-                                        <button type="button" data-toggle="tooltip" title="Editar usuário" class="editUser btn-md" css="background-color: transparent;" onclick="editUser(@item.UserID)">
+                                        <button type="button" data-toggle="tooltip" title="Editar usuário" class="editUser btn-md" css="background-color: transparent;" onclick="editUser('@item.UserID')">
                                             <i class="material-icons">edit</i>
                                         </button>
                                         @Html.DisplayFor(modelItem => item.Name)

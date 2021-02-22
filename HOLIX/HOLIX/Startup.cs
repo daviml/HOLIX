@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using HOLIX.Database;
+using HOLIX.Repository;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +21,7 @@ namespace HOLIX
         public Startup(IConfiguration configuration)
         {
             this.Configuration = configuration;
+            Connection.StartConnection(this.Configuration.GetConnectionString("DatabaseConn"));
         }
 
         /// <summary>
@@ -39,6 +42,8 @@ namespace HOLIX
                 options.CheckConsentNeeded = context => true;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
+
+            services.AddScoped<UserRepository, UserRepository>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
